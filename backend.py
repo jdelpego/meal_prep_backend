@@ -71,10 +71,16 @@ def optimize_meal(request: MealRequest):
         "achieved_fat_percent": round(fat_percent, 1)
     }
 
-    # Add micronutrients
+    # Add only the specified longevity-related micronutrients
+    desired_micronutrients = [
+        "magnesium_mg", "zinc_mg", "selenium_ug", "potassium_mg", "calcium_mg", "iron_mg", "copper_mg", "manganese_mg", "iodine_ug",
+        "vitamin_d_ug", "vitamin_k_ug", "vitamin_a_ug", "vitamin_e_mg", "vitamin_c_mg",
+        "thiamin_mg", "riboflavin_mg", "niacin_mg", "pantothenic_acid_mg", "vitamin_b6_mg", "biotin_ug", "folate_ug", "vitamin_b12_ug",
+        "choline_mg", "epa_g", "dha_g"
+    ]
     micronutrients = {}
-    for key in FOOD_DATA[foods[0]].keys():
-        if key not in ["kcal", "carbs_g", "protein_g", "fat_g", "fiber_g", "sugar_g", "min_g", "max_g"]:
+    for key in desired_micronutrients:
+        if key in FOOD_DATA[foods[0]]:
             total = sum(amounts_g[i] * FOOD_DATA[foods[i]][key] / 100 for i in range(len(foods)))
             micronutrients[key] = round(total, 1)
     result.update(micronutrients)
