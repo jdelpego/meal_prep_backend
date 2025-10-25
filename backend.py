@@ -6,6 +6,28 @@ from scipy.optimize import lsq_linear
 from food_data import FOOD_DATA
 from typing import List
 
+def calculate_scores(achieved_carbs_percent, achieved_protein_percent, achieved_fat_percent,
+                     target_carbs_percent, target_protein_percent, target_fat_percent, micronutrients):
+    # Macro score: 100% if exactly matching targets, decreases with deviation
+    macro_deviation = (abs(achieved_carbs_percent - target_carbs_percent) +
+                       abs(achieved_protein_percent - target_protein_percent) +
+                       abs(achieved_fat_percent - target_fat_percent)) / 3
+    macro_score = max(0, 100 - macro_deviation)
+    
+    # Micro score: Average of how much each micronutrient meets or exceeds DV (capped at 100% per nutrient)
+    micro_scores = []
+    for nutrient in micronutrients.values():
+        total = nutrient["total"]
+        dv = nutrient["daily_value"]
+        if dv > 0:
+            score = min(1.0, total / dv)
+        else:
+            score = 1.0  # If no DV, consider it met
+        micro_scores.append(score)
+    micro_score = (sum(micro_scores) / len(micro_scores)) * 100 if micro_scores else 0
+    
+    return round(macro_score, 1), round(micro_score, 1)
+
 # Daily Values (RDAs) for an average adult (approximate, based on FDA/USDA guidelines)
 DAILY_VALUES = {
     "magnesium_mg": 400,
@@ -30,9 +52,6 @@ DAILY_VALUES = {
     "biotin_ug": 30,
     "folate_ug": 400,
     "vitamin_b12_ug": 2.4,
-    "choline_mg": 550,
-    "epa_g": 0.25,  # Approximate for omega-3 (EPA+DHA total ~0.5g/day)
-    "dha_g": 0.25
 }
 
 app = FastAPI()
@@ -119,6 +138,13 @@ def optimize_meal(request: MealRequest):
                 "percentage": round(percentage, 1)
             }
     result["micronutrients"] = micronutrients
+
+    # Calculate macro and micro scores
+    macro_score, micro_score = calculate_scores(carbs_percent, protein_percent, fat_percent,
+                                                 request.target_carbs_percent, request.target_protein_percent, request.target_fat_percent,
+                                                 micronutrients)
+    result["macro_score"] = macro_score
+    result["micro_score"] = micro_score
 
     return result
 
