@@ -29,6 +29,7 @@ def calculate_scores(achieved_carbs_percent, achieved_protein_percent, achieved_
     return round(macro_score, 1), round(micro_score, 1)
 
 # Daily Values (RDAs) for an average adult (approximate, based on FDA/USDA guidelines)
+STANDARD_DAILY_KCAL = 2000
 DAILY_VALUES = {
     "magnesium_mg": 400,
     "zinc_mg": 11,
@@ -130,14 +131,15 @@ def optimize_meal(request: MealRequest):
         "choline_mg", "epa_g", "dha_g"
     ]
     micronutrients = {}
+    scaling_factor = request.target_kcal / STANDARD_DAILY_KCAL
     for key in desired_micronutrients:
         if key in FOOD_DATA[foods[0]]:
             total = sum(amounts_g[i] * FOOD_DATA[foods[i]][key] / 100 for i in range(len(foods)))
-            dv = DAILY_VALUES[key]
-            percentage = (total / dv) * 100 if dv > 0 else 0
+            effective_dv = DAILY_VALUES[key] * scaling_factor
+            percentage = (total / effective_dv) * 100 if effective_dv > 0 else 0
             micronutrients[key] = {
                 "total": round(total, 1),
-                "daily_value": dv,
+                "daily_value": round(effective_dv, 1),
                 "percentage": round(percentage, 1)
             }
     result["micronutrients"] = micronutrients
