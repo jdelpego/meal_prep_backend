@@ -1,14 +1,39 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
 from scipy.optimize import lsq_linear
+from food_data import FOOD_DATA
 
 app = FastAPI()
 
-# Hardcoded food data per 100g: [kcal, carbs_g, protein_g, fat_g]
-chicken = np.array([165, 0, 31, 3.6])
-rice = np.array([130, 28, 4.4, 0.4])
-avocado = np.array([160, 9, 2, 15])  # Example values; adjust as needed
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Food data per 100g: [kcal, carbs_g, protein_g, fat_g]
+chicken = np.array([
+    FOOD_DATA["chicken"]["kcal"],
+    FOOD_DATA["chicken"]["carbs_g"],
+    FOOD_DATA["chicken"]["protein_g"],
+    FOOD_DATA["chicken"]["fat_g"]
+])
+rice = np.array([
+    FOOD_DATA["white_rice"]["kcal"],
+    FOOD_DATA["white_rice"]["carbs_g"],
+    FOOD_DATA["white_rice"]["protein_g"],
+    FOOD_DATA["white_rice"]["fat_g"]
+])
+avocado = np.array([
+    FOOD_DATA["avocado"]["kcal"],
+    FOOD_DATA["avocado"]["carbs_g"],
+    FOOD_DATA["avocado"]["protein_g"],
+    FOOD_DATA["avocado"]["fat_g"]
+])
 
 # Bounds in grams
 min_chicken_g = 0.0
