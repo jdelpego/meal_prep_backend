@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
 from scipy.optimize import lsq_linear
-from food_data import FOOD_DATA
 
 app = FastAPI()
 
@@ -15,25 +14,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Food data per 100g: [kcal, carbs_g, protein_g, fat_g]
-chicken = np.array([
-    FOOD_DATA["chicken"]["kcal"],
-    FOOD_DATA["chicken"]["carbs_g"],
-    FOOD_DATA["chicken"]["protein_g"],
-    FOOD_DATA["chicken"]["fat_g"]
-])
-rice = np.array([
-    FOOD_DATA["white_rice"]["kcal"],
-    FOOD_DATA["white_rice"]["carbs_g"],
-    FOOD_DATA["white_rice"]["protein_g"],
-    FOOD_DATA["white_rice"]["fat_g"]
-])
-avocado = np.array([
-    FOOD_DATA["avocado"]["kcal"],
-    FOOD_DATA["avocado"]["carbs_g"],
-    FOOD_DATA["avocado"]["protein_g"],
-    FOOD_DATA["avocado"]["fat_g"]
-])
+# Hardcoded food data per 100g: [kcal, carbs_g, protein_g, fat_g]
+chicken = np.array([165, 0, 31, 3.6])
+rice = np.array([130, 28, 4.4, 0.4])
+avocado = np.array([160, 9, 2, 15])
 
 # Bounds in grams
 min_chicken_g = 0.0
@@ -66,7 +50,7 @@ def optimize_meal(request: MealRequest):
     # Normalize and weight
     A_s = A / b[:, None]
     b_s = b / b
-    row_weights = np.array([1.0, 5.0, 5.0, 5.0])
+    row_weights = np.array([5.0, 1.0, 1.0, 1.0])
     WA = row_weights[:, None] * A_s
     Wb = row_weights * b_s
 
@@ -83,7 +67,7 @@ def optimize_meal(request: MealRequest):
     protein_percent = (achieved[2] * 4.0) / achieved[0] * 100.0
     fat_percent = (achieved[3] * 9.0) / achieved[0] * 100.0
 
-    result = {
+    return {
         "chicken_g": round(chicken_g, 1),
         "rice_g": round(rice_g, 1),
         "avocado_g": round(avocado_g, 1),
@@ -92,18 +76,6 @@ def optimize_meal(request: MealRequest):
         "achieved_protein_percent": round(protein_percent, 1),
         "achieved_fat_percent": round(fat_percent, 1)
     }
-
-    # Add micronutrients
-    for key in FOOD_DATA["chicken"].keys():
-        if key not in ["kcal", "carbs_g", "protein_g", "fat_g", "fiber_g", "sugar_g"]:
-            result[key] = round(
-                chicken_g * FOOD_DATA["chicken"][key] / 100 +
-                rice_g * FOOD_DATA["white_rice"][key] / 100 +
-                avocado_g * FOOD_DATA["avocado"][key] / 100,
-                1
-            )
-
-    return result
 
 if __name__ == "__main__":
     import uvicorn
