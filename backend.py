@@ -15,25 +15,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Food data per 100g: [kcal, carbs_g, protein_g, fat_g]
-chicken = np.array([
-    FOOD_DATA["chicken"]["kcal"],
-    FOOD_DATA["chicken"]["carbs_g"],
-    FOOD_DATA["chicken"]["protein_g"],
-    FOOD_DATA["chicken"]["fat_g"]
-])
-rice = np.array([
-    FOOD_DATA["white_rice"]["kcal"],
-    FOOD_DATA["white_rice"]["carbs_g"],
-    FOOD_DATA["white_rice"]["protein_g"],
-    FOOD_DATA["white_rice"]["fat_g"]
-])
-avocado = np.array([
-    FOOD_DATA["avocado"]["kcal"],
-    FOOD_DATA["avocado"]["carbs_g"],
-    FOOD_DATA["avocado"]["protein_g"],
-    FOOD_DATA["avocado"]["fat_g"]
-])
+# Hardcoded food data per 100g: [kcal, carbs_g, protein_g, fat_g] with bounds
+foods = {
+    "chicken": {"data": np.array([165, 0, 31, 3.6]), "min_g": 0.0, "max_g": 10000.0},
+    "rice": {"data": np.array([130, 28, 4.4, 0.4]), "min_g": 0.0, "max_g": 10000.0},
+    "avocado": {"data": np.array([160, 9, 2, 15]), "min_g": 0.0, "max_g": 10000.0}
+}
+
+chicken = foods["chicken"]["data"]
+rice = foods["rice"]["data"]
+avocado = foods["avocado"]["data"]
+
+# Bounds in grams
+min_chicken_g = foods["chicken"]["min_g"]
+max_chicken_g = foods["chicken"]["max_g"]
+min_rice_g = foods["rice"]["min_g"]
+max_rice_g = foods["rice"]["max_g"]
+min_avocado_g = foods["avocado"]["min_g"]
+max_avocado_g = foods["avocado"]["max_g"]
 
 # Bounds in grams
 min_chicken_g = 0.0
@@ -66,7 +65,7 @@ def optimize_meal(request: MealRequest):
     # Normalize and weight
     A_s = A / b[:, None]
     b_s = b / b
-    row_weights = np.array([1.0, 5.0, 5.0, 5.0])
+    row_weights = np.array([5.0, 1.0, 1.0, 1.0])
     WA = row_weights[:, None] * A_s
     Wb = row_weights * b_s
 
