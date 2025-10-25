@@ -1,0 +1,21 @@
+
+PREFERENCES = {
+    "kcalories": 700,
+    "kcalories_daily": 2000,
+    "carbs_percent": 40,
+    "protein_percent": 30,
+    "fat_percent": 30,
+    "fiber_g": 25,
+    "magnesium_mg": 350,
+    "potassium_mg": 4700,
+    "selenium_ug": 55,
+    "zinc_mg": 10,
+    "vitamin_d_ug": 25,
+    "vitamin_k2_ug": 100,
+    "folate_ug": 400,
+    "vitamin_b12_ug": 2.4,
+    "omega3_epa_dha_g": 1.5,
+    "vitamin_c_mg": 90,
+    "vitamin_e_mg": 15,
+    "choline_mg": 400,
+}
