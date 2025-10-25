@@ -84,15 +84,18 @@ def optimize_meal(request: MealRequest):
     fat_percent = (achieved[3] * 9.0) / achieved[0] * 100.0
 
     # Calculate micronutrients
-    micronutrients = {}
+    micronutrients = []
     for key in FOOD_DATA["chicken"].keys():
         if key not in ["kcal", "carbs_g", "protein_g", "fat_g", "fiber_g", "sugar_g"]:
-            micronutrients[key] = round(
-                chicken_g * FOOD_DATA["chicken"][key] / 100 +
-                rice_g * FOOD_DATA["white_rice"][key] / 100 +
-                avocado_g * FOOD_DATA["avocado"][key] / 100,
-                1
-            )
+            micronutrients.append({
+                "name": key,
+                "value": round(
+                    chicken_g * FOOD_DATA["chicken"][key] / 100 +
+                    rice_g * FOOD_DATA["white_rice"][key] / 100 +
+                    avocado_g * FOOD_DATA["avocado"][key] / 100,
+                    1
+                )
+            })
 
     return {
         "chicken_g": round(chicken_g, 1),
