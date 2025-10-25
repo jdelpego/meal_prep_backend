@@ -6,6 +6,35 @@ from scipy.optimize import lsq_linear
 from food_data import FOOD_DATA
 from typing import List
 
+# Daily Values (RDAs) for an average adult (approximate, based on FDA/USDA guidelines)
+DAILY_VALUES = {
+    "magnesium_mg": 400,
+    "zinc_mg": 11,
+    "selenium_ug": 55,
+    "potassium_mg": 4700,
+    "calcium_mg": 1000,
+    "iron_mg": 18,
+    "copper_mg": 0.9,
+    "manganese_mg": 2.3,
+    "iodine_ug": 150,
+    "vitamin_d_ug": 15,
+    "vitamin_k_ug": 120,
+    "vitamin_a_ug": 900,
+    "vitamin_e_mg": 15,
+    "vitamin_c_mg": 90,
+    "thiamin_mg": 1.2,
+    "riboflavin_mg": 1.3,
+    "niacin_mg": 16,
+    "pantothenic_acid_mg": 5,
+    "vitamin_b6_mg": 1.7,
+    "biotin_ug": 30,
+    "folate_ug": 400,
+    "vitamin_b12_ug": 2.4,
+    "choline_mg": 550,
+    "epa_g": 0.25,  # Approximate for omega-3 (EPA+DHA total ~0.5g/day)
+    "dha_g": 0.25
+}
+
 app = FastAPI()
 
 app.add_middleware(
@@ -71,7 +100,7 @@ def optimize_meal(request: MealRequest):
         "achieved_fat_percent": round(fat_percent, 1)
     }
 
-    # Add only the specified longevity-related micronutrients
+    # Add only the specified longevity-related micronutrients with totals, DVs, and percentages
     desired_micronutrients = [
         "magnesium_mg", "zinc_mg", "selenium_ug", "potassium_mg", "calcium_mg", "iron_mg", "copper_mg", "manganese_mg", "iodine_ug",
         "vitamin_d_ug", "vitamin_k_ug", "vitamin_a_ug", "vitamin_e_mg", "vitamin_c_mg",
@@ -82,8 +111,14 @@ def optimize_meal(request: MealRequest):
     for key in desired_micronutrients:
         if key in FOOD_DATA[foods[0]]:
             total = sum(amounts_g[i] * FOOD_DATA[foods[i]][key] / 100 for i in range(len(foods)))
-            micronutrients[key] = round(total, 1)
-    result.update(micronutrients)
+            dv = DAILY_VALUES[key]
+            percentage = (total / dv) * 100 if dv > 0 else 0
+            micronutrients[key] = {
+                "total": round(total, 1),
+                "daily_value": dv,
+                "percentage": round(percentage, 1)
+            }
+    result["micronutrients"] = micronutrients
 
     return result
 
