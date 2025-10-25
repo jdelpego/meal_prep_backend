@@ -52,6 +52,9 @@ DAILY_VALUES = {
     "biotin_ug": 30,
     "folate_ug": 400,
     "vitamin_b12_ug": 2.4,
+    "choline_mg": 550,
+    "epa_g": 0.25,  # Approximate for omega-3 (EPA+DHA total ~0.5g/day)
+    "dha_g": 0.25
 }
 
 app = FastAPI()
