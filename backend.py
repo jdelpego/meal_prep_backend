@@ -64,8 +64,16 @@ def optimize_meal(request: MealRequest):
     WA = row_weights[:, None] * A_s
     Wb = row_weights * b_s
 
-    lower_bounds = np.array([0.0, 0.0, 0.0])
-    upper_bounds = np.array([10000.0, 10000.0, 10000.0])
+    lower_bounds = np.array([
+        FOOD_DATA[request.protein_food]["min_g"],
+        FOOD_DATA[request.carb_food]["min_g"],
+        FOOD_DATA[request.veggie_food]["min_g"]
+    ])
+    upper_bounds = np.array([
+        FOOD_DATA[request.protein_food]["max_g"],
+        FOOD_DATA[request.carb_food]["max_g"],
+        FOOD_DATA[request.veggie_food]["max_g"]
+    ])
 
     res = lsq_linear(WA, Wb, bounds=(lower_bounds, upper_bounds), lsmr_tol='auto', verbose=0)
     amounts_g = res.x

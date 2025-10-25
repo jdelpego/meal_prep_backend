@@ -31,6 +31,8 @@ FOOD_DATA = {
         "copper_mg": 0.1,
         "manganese_mg": 0.0,
         "selenium_mcg": 22.0,
+        "min_g": 0.0,
+        "max_g": 10000.0,
     },
     "white_rice": {
         "kcal": 130,
@@ -61,6 +63,8 @@ FOOD_DATA = {
         "copper_mg": 0.1,
         "manganese_mg": 0.5,
         "selenium_mcg": 7.5,
+        "min_g": 0.0,
+        "max_g": 10000.0,
     },
     "avocado": {
         "kcal": 160,
@@ -91,5 +95,7 @@ FOOD_DATA = {
         "copper_mg": 0.2,
         "manganese_mg": 0.1,
         "selenium_mcg": 0.4,
+        "min_g": 0.0,
+        "max_g": 10000.0,
     },
 }
