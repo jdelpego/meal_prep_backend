@@ -66,7 +66,7 @@ def optimize_meal(request: MealRequest):
     # Normalize and weight
     A_s = A / b[:, None]
     b_s = b / b
-    row_weights = np.array([5.0, 1.0, 1.0, 1.0])
+    row_weights = np.array([1.0, 1.0, 1.0, 1.0])
     WA = row_weights[:, None] * A_s
     Wb = row_weights * b_s
 
