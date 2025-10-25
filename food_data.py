@@ -4,6 +4,7 @@
 
 FOOD_DATA = {
     "chicken": {
+        "category": "protein",
         "kcal": 165,
         "carbs_g": 0,
         "protein_g": 31,
@@ -25,6 +26,7 @@ FOOD_DATA = {
         "choline_mg": 0
     },
     "salmon": {
+        "category": "protein",
         "kcal": 206,
         "carbs_g": 0,
         "protein_g": 22,
@@ -46,6 +48,7 @@ FOOD_DATA = {
         "choline_mg": 105
     },
     "eggs": {
+        "category": "protein",
         "kcal": 143,
         "carbs_g": 0.7,
         "protein_g": 13,
@@ -67,6 +70,7 @@ FOOD_DATA = {
         "choline_mg": 293
     },
     "beef": {
+        "category": "protein",
         "kcal": 250,
         "carbs_g": 0,
         "protein_g": 26,
@@ -88,6 +92,7 @@ FOOD_DATA = {
         "choline_mg": 82
     },
     "white_rice": {
+        "category": "carb",
         "kcal": 130,
         "carbs_g": 28,
         "protein_g": 4.4,
@@ -109,6 +114,7 @@ FOOD_DATA = {
         "choline_mg": 0
     },
     "sweet_potato": {
+        "category": "carb",
         "kcal": 86,
         "carbs_g": 20,
         "protein_g": 1.6,
@@ -130,6 +136,7 @@ FOOD_DATA = {
         "choline_mg": 12
     },
     "oats": {
+        "category": "carb",
         "kcal": 379,
         "carbs_g": 66,
         "protein_g": 17,
@@ -151,6 +158,7 @@ FOOD_DATA = {
         "choline_mg": 0
     },
     "quinoa": {
+        "category": "carb",
         "kcal": 368,
         "carbs_g": 64,
         "protein_g": 14,
@@ -172,6 +180,7 @@ FOOD_DATA = {
         "choline_mg": 0
     },
     "banana": {
+        "category": "fruit",
         "kcal": 89,
         "carbs_g": 23,
         "protein_g": 1.1,
@@ -193,6 +202,7 @@ FOOD_DATA = {
         "choline_mg": 9.8
     },
     "broccoli": {
+        "category": "vegetable",
         "kcal": 34,
         "carbs_g": 7,
         "protein_g": 2.8,
@@ -214,6 +224,7 @@ FOOD_DATA = {
         "choline_mg": 18.7
     },
     "spinach": {
+        "category": "vegetable",
         "kcal": 23,
         "carbs_g": 3.6,
         "protein_g": 2.9,
@@ -235,6 +246,7 @@ FOOD_DATA = {
         "choline_mg": 12.8
     },
     "carrots": {
+        "category": "vegetable",
         "kcal": 41,
         "carbs_g": 10,
         "protein_g": 0.9,
@@ -256,6 +268,7 @@ FOOD_DATA = {
         "choline_mg": 8.8
     },
     "bell_pepper": {
+        "category": "vegetable",
         "kcal": 31,
         "carbs_g": 6,
         "protein_g": 1.0,
@@ -277,6 +290,7 @@ FOOD_DATA = {
         "choline_mg": 5.5
     },
     "tomato": {
+        "category": "vegetable",
         "kcal": 18,
         "carbs_g": 3.9,
         "protein_g": 0.9,
@@ -298,6 +312,7 @@ FOOD_DATA = {
         "choline_mg": 6.7
     },
     "kale": {
+        "category": "vegetable",
         "kcal": 49,
         "carbs_g": 8.8,
         "protein_g": 4.3,
@@ -319,6 +334,7 @@ FOOD_DATA = {
         "choline_mg": 0.8
     },
     "cauliflower": {
+        "category": "vegetable",
         "kcal": 25,
         "carbs_g": 5,
         "protein_g": 1.9,
@@ -340,6 +356,7 @@ FOOD_DATA = {
         "choline_mg": 45.2
     },
     "avocado": {
+        "category": "fat",
         "kcal": 160,
         "carbs_g": 9,
         "protein_g": 2,
@@ -361,6 +378,7 @@ FOOD_DATA = {
         "choline_mg": 0
     },
     "almonds": {
+        "category": "fat",
         "kcal": 579,
         "carbs_g": 22,
         "protein_g": 21,
@@ -382,6 +400,7 @@ FOOD_DATA = {
         "choline_mg": 52.1
     },
     "blueberries": {
+        "category": "fruit",
         "kcal": 57,
         "carbs_g": 14,
         "protein_g": 0.7,

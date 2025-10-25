@@ -82,6 +82,13 @@ def optimize_meal(request: MealRequest):
     if unknown_foods:
         raise HTTPException(status_code=400, detail=f"Unknown foods requested: {', '.join(unknown_foods)}")
 
+    protein_count = sum(1 for food in foods if FOOD_DATA[food].get("category") == "protein")
+    carb_count = sum(1 for food in foods if FOOD_DATA[food].get("category") == "carb")
+    if protein_count > 2:
+        raise HTTPException(status_code=400, detail="A meal can include at most two primary protein sources.")
+    if carb_count > 2:
+        raise HTTPException(status_code=400, detail="A meal can include at most two primary carbohydrate sources.")
+
     meal_kcal_target = PREFERENCES.get("kcalories", request.target_kcal or STANDARD_DAILY_KCAL)
     carbs_percent_target = PREFERENCES.get("carbs_percent", request.target_carbs_percent or 0.0)
     protein_percent_target = PREFERENCES.get("protein_percent", request.target_protein_percent or 0.0)
