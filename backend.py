@@ -15,46 +15,41 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Hardcoded food data per 100g: [kcal, carbs_g, protein_g, fat_g] with bounds
-foods = {
-    "chicken": {"data": np.array([165, 0, 31, 3.6]), "min_g": 0.0, "max_g": 10000.0},
-    "rice": {"data": np.array([130, 28, 4.4, 0.4]), "min_g": 0.0, "max_g": 10000.0},
-    "avocado": {"data": np.array([160, 9, 2, 15]), "min_g": 0.0, "max_g": 10000.0}
-}
-
-chicken = foods["chicken"]["data"]
-rice = foods["rice"]["data"]
-avocado = foods["avocado"]["data"]
-
-# Bounds in grams
-min_chicken_g = foods["chicken"]["min_g"]
-max_chicken_g = foods["chicken"]["max_g"]
-min_rice_g = foods["rice"]["min_g"]
-max_rice_g = foods["rice"]["max_g"]
-min_avocado_g = foods["avocado"]["min_g"]
-max_avocado_g = foods["avocado"]["max_g"]
-
-# Bounds in grams
-min_chicken_g = 0.0
-max_chicken_g = 10000.0
-min_rice_g = 0.0
-max_rice_g = 10000.0
-min_avocado_g = 0.0
-max_avocado_g = 10000.0
-
 class MealRequest(BaseModel):
     target_kcal: float
     target_carbs_percent: float
     target_protein_percent: float
     target_fat_percent: float
+    protein_food: str
+    carb_food: str
+    veggie_food: str
 
 @app.post("/optimize_meal")
 def optimize_meal(request: MealRequest):
     # Prepare per-gram vectors
-    chicken_per_g = chicken / 100.0
-    rice_per_g = rice / 100.0
-    avocado_per_g = avocado / 100.0
-    A = np.column_stack((chicken_per_g, rice_per_g, avocado_per_g))
+    protein_data = np.array([
+        FOOD_DATA[request.protein_food]["kcal"],
+        FOOD_DATA[request.protein_food]["carbs_g"],
+        FOOD_DATA[request.protein_food]["protein_g"],
+        FOOD_DATA[request.protein_food]["fat_g"]
+    ])
+    carb_data = np.array([
+        FOOD_DATA[request.carb_food]["kcal"],
+        FOOD_DATA[request.carb_food]["carbs_g"],
+        FOOD_DATA[request.carb_food]["protein_g"],
+        FOOD_DATA[request.carb_food]["fat_g"]
+    ])
+    veggie_data = np.array([
+        FOOD_DATA[request.veggie_food]["kcal"],
+        FOOD_DATA[request.veggie_food]["carbs_g"],
+        FOOD_DATA[request.veggie_food]["protein_g"],
+        FOOD_DATA[request.veggie_food]["fat_g"]
+    ])
+    
+    protein_per_g = protein_data / 100.0
+    carb_per_g = carb_data / 100.0
+    veggie_per_g = veggie_data / 100.0
+    A = np.column_stack((protein_per_g, carb_per_g, veggie_per_g))
 
     # Compute targets
     carbs_g_target = (request.target_kcal * (request.target_carbs_percent / 100.0)) / 4.0
@@ -65,17 +60,17 @@ def optimize_meal(request: MealRequest):
     # Normalize and weight
     A_s = A / b[:, None]
     b_s = b / b
-    row_weights = np.array([5.0, 1.0, 1.0, 1.0])
+    row_weights = np.array([1.0, 5.0, 5.0, 5.0])
     WA = row_weights[:, None] * A_s
     Wb = row_weights * b_s
 
-    lower_bounds = np.array([min_chicken_g, min_rice_g, min_avocado_g])
-    upper_bounds = np.array([max_chicken_g, max_rice_g, max_avocado_g])
+    lower_bounds = np.array([0.0, 0.0, 0.0])
+    upper_bounds = np.array([10000.0, 10000.0, 10000.0])
 
     res = lsq_linear(WA, Wb, bounds=(lower_bounds, upper_bounds), lsmr_tol='auto', verbose=0)
     amounts_g = res.x
 
-    chicken_g, rice_g, avocado_g = amounts_g
+    protein_g, carb_g, veggie_g = amounts_g
     achieved = A.dot(amounts_g)
 
     carbs_percent = (achieved[1] * 4.0) / achieved[0] * 100.0
@@ -83,9 +78,9 @@ def optimize_meal(request: MealRequest):
     fat_percent = (achieved[3] * 9.0) / achieved[0] * 100.0
 
     result = {
-        "chicken_g": round(chicken_g, 1),
-        "rice_g": round(rice_g, 1),
-        "avocado_g": round(avocado_g, 1),
+        f"{request.protein_food}_g": round(protein_g, 1),
+        f"{request.carb_food}_g": round(carb_g, 1),
+        f"{request.veggie_food}_g": round(veggie_g, 1),
         "achieved_kcal": round(achieved[0], 1),
         "achieved_carbs_percent": round(carbs_percent, 1),
         "achieved_protein_percent": round(protein_percent, 1),
@@ -93,16 +88,15 @@ def optimize_meal(request: MealRequest):
     }
 
     # Add micronutrients
-    for key in FOOD_DATA["chicken"].keys():
+    for key in FOOD_DATA[request.protein_food].keys():
         if key not in ["kcal", "carbs_g", "protein_g", "fat_g", "fiber_g", "sugar_g"]:
             result[key] = round(
-                chicken_g * FOOD_DATA["chicken"][key] / 100 +
-                rice_g * FOOD_DATA["white_rice"][key] / 100 +
-                avocado_g * FOOD_DATA["avocado"][key] / 100,
+                protein_g * FOOD_DATA[request.protein_food][key] / 100 +
+                carb_g * FOOD_DATA[request.carb_food][key] / 100 +
+                veggie_g * FOOD_DATA[request.veggie_food][key] / 100,
                 1
             )
 
-    return result
     return result
 
 if __name__ == "__main__":
