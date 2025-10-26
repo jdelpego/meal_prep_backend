@@ -18,29 +18,23 @@ app.add_middleware(
 @app.post("/optimize_meal_prep")
 def optimize_meal_prep(foods: list[str]):
     
-    # Build constraint matrix A where each column is a food's nutritional profile
-    # Order matches PRESETS['weights'] dictionary order
     columns = []
     for food in foods:
         column = []
         for category in PRESETS['weights'].keys():
             if category == "vegetable_g":
-                # Special case: 1.0 if vegetable, 0.0 otherwise
                 column.append(1.0 if FOOD_DATA[food]['category'] == "vegetable" else 0.0)
             else:
-                # Regular nutritional values per 100g
                 column.append(FOOD_DATA[food][category] / 100.0)
         columns.append(column)
     A = np.column_stack(columns)
     
-    # Compute targets in grams (order matches PRESETS['weights'] dictionary order)
     target_kcalories = PRESETS['targets']["kcalories"]
     target_carbs_g = (target_kcalories * (PRESETS['targets']["carbs_percent"] / 100.0)) / 4.0
     target_protein_g = (target_kcalories * (PRESETS['targets']["protein_percent"] / 100.0)) / 4.0
     target_fat_g = (target_kcalories * (PRESETS['targets']["fat_percent"] / 100.0)) / 9.0
     target_vegetable_g = target_kcalories * (PRESETS['targets']['vegetable_g_calorie_ratio'])
 
-    # Build targets vector in same order as weights
     targets = []
     for category in PRESETS['weights'].keys():
         if category == "kcalories":
