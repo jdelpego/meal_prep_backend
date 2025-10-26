@@ -4,6 +4,8 @@ import numpy as np
 from scipy.optimize import lsq_linear
 from food_data import FOOD_DATA
 from presets import PRESETS
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 app = FastAPI()
 
@@ -98,17 +100,18 @@ def optimize_meal_prep(foods: list[str]):
                     results_dict[category] = 0
                 results_dict[category] += FOOD_DATA[food][category] * x[i] / 100.0
 
-    results_dict['carbs_percent'] = (results_dict['carbs_g'] * 4.0) / results_dict['kcalories'] * 100.0
-    results_dict['protein_percent'] = (results_dict['protein_g'] * 4.0) / results_dict['kcalories'] * 100.0
-    results_dict['fat_percent'] = (results_dict['fat_g'] * 9.0) / results_dict['kcalories'] * 100.0
-    results_dict['vegetable_calorie_ratio'] = results_dict['vegetable_g'] / results_dict['kcalories']
-        
-    # Calculate actual vegetable weight from optimized solution
+    # Calculate actual vegetable weight from optimized solution (do this FIRST)
     total_vegetable_g = sum([x[i] for i, food in enumerate(foods) if FOOD_DATA[food]['category'] == "vegetable"])
     total_meal_weight = sum(x)
     
     results_dict['vegetable_g'] = total_vegetable_g
     results_dict['vegetable_weight_percent'] = (total_vegetable_g / total_meal_weight) * 100.0
+    
+    # Now calculate percentages (using vegetable_g that was just set)
+    results_dict['carbs_percent'] = (results_dict['carbs_g'] * 4.0) / results_dict['kcalories'] * 100.0
+    results_dict['protein_percent'] = (results_dict['protein_g'] * 4.0) / results_dict['kcalories'] * 100.0
+    results_dict['fat_percent'] = (results_dict['fat_g'] * 9.0) / results_dict['kcalories'] * 100.0
+    results_dict['vegetable_calorie_ratio'] = results_dict['vegetable_g'] / results_dict['kcalories']
 
     # Round all results to 2 decimal places
     results_dict = {k: round(v, 2) for k, v in results_dict.items()}
@@ -125,8 +128,43 @@ def optimize_meal_prep(foods: list[str]):
 
 @app.post("/find_missing_ingredient")
 def find_missing_ingredient(foods: list[str]):
+    """Suggests missing ingredients to fill micronutrient gaps."""
+    # 1️⃣ Run optimizer
     nutrition = optimize_meal_prep(foods)
-    
+    results = nutrition["nutrition_results"]
+    targets = nutrition["nutrition_targets"]
+
+    # 2️⃣ Find micronutrient gaps (>5%)
+    micronutrients = list(PRESETS["daily_values"]["micronutrients"].keys())
+    micro_gap = {}
+    for m in micronutrients:
+        target = targets.get(m, 0)
+        current = results.get(m, 0)
+        if target > 0:
+            gap = (target - current) / target
+            if gap > 0.05:
+                micro_gap[m] = gap
+
+    if not micro_gap:
+        return {"ingredients": []}
+
+    # 3️⃣ Build nutrient matrix for all foods
+    food_names = list(FOOD_DATA.keys())
+    nutrient_matrix = np.array([[FOOD_DATA[f][m] for m in micronutrients] for f in food_names])
+    gap_vector = np.array([micro_gap.get(m, 0.0) for m in micronutrients])
+
+    # 4️⃣ Compute cosine similarity
+    sims = cosine_similarity(nutrient_matrix, gap_vector.reshape(1, -1)).flatten()
+
+    # 5️⃣ Exclude already used foods
+    candidate_scores = [(f, float(sims[i])) for i, f in enumerate(food_names) if f not in foods]
+    candidate_scores.sort(key=lambda x: x[1], reverse=True)
+
+    # 6️⃣ Return top 5 names only
+    top_ingredients = [f for f, _ in candidate_scores[:5]]
+
+    return {"ingredients": top_ingredients}
+
 
 if __name__ == "__main__":
     import uvicorn
