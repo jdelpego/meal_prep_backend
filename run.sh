@@ -1,7 +1,9 @@
 #!/bin/bash
+# Start the FastAPI application
+# Works locally and on Render
 
-# Activate the virtual environment
-source .venv/bin/activate
+# Use PORT environment variable if available (Render sets this)
+# Otherwise default to 8001 for local development
+PORT=${PORT:-8001}
 
-# Run the FastAPI server
-uvicorn backend:app --host 0.0.0.0 --port 8001 --reload
+uvicorn app:app --host 0.0.0.0 --port $PORT
