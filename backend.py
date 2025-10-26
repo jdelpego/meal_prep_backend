@@ -18,39 +18,73 @@ app.add_middleware(
 @app.post("/optimize_meal_prep")
 def optimize_meal_prep(foods: list[str]):
     
+    # Build constraint matrix A where each column is a food's nutritional profile
+    # Order matches PRESETS['weights'] dictionary order
     columns = []
     for food in foods:
-        column = [FOOD_DATA[food][category]/100.0 for category, _ in PRESETS['weights'].items() if category != "vegetable_g"]
-        column.insert(4, 1.0 if FOOD_DATA[food]['category'] == "vegetable" else 0.0)
+        column = []
+        for category in PRESETS['weights'].keys():
+            if category == "vegetable_g":
+                # Special case: 1.0 if vegetable, 0.0 otherwise
+                column.append(1.0 if FOOD_DATA[food]['category'] == "vegetable" else 0.0)
+            else:
+                # Regular nutritional values per 100g
+                column.append(FOOD_DATA[food][category] / 100.0)
         columns.append(column)
     A = np.column_stack(columns)
     
-    # Compute targets in grams
+    # Compute targets in grams (order matches PRESETS['weights'] dictionary order)
     target_kcalories = PRESETS['targets']["kcalories"]
     target_carbs_g = (target_kcalories * (PRESETS['targets']["carbs_percent"] / 100.0)) / 4.0
     target_protein_g = (target_kcalories * (PRESETS['targets']["protein_percent"] / 100.0)) / 4.0
     target_fat_g = (target_kcalories * (PRESETS['targets']["fat_percent"] / 100.0)) / 9.0
     target_vegetable_g = target_kcalories * (PRESETS['targets']['vegetable_g_calorie_ratio'])
 
-
-    targets = [
-        target_kcalories,
-        target_carbs_g,
-        target_protein_g,
-        target_fat_g,
-        target_vegetable_g
-    ]
-    for category, _ in PRESETS['daily_values']['micronutrients'].items():
-        targets.append(PRESETS['daily_values']['micronutrients'][category] * (target_kcalories / PRESETS['daily_values']['kcalories']))
+    # Build targets vector in same order as weights
+    targets = []
+    for category in PRESETS['weights'].keys():
+        if category == "kcalories":
+            targets.append(target_kcalories)
+        elif category == "carbs_g":
+            targets.append(target_carbs_g)
+        elif category == "protein_g":
+            targets.append(target_protein_g)
+        elif category == "fat_g":
+            targets.append(target_fat_g)
+        elif category == "vegetable_g":
+            targets.append(target_vegetable_g)
+        else:
+            # Micronutrients - scale by calorie ratio
+            targets.append(PRESETS['daily_values']['micronutrients'][category] * (target_kcalories / PRESETS['daily_values']['kcalories']))
         
     b = np.array(targets)
 
-    # Calories, Carb, Protein, Fat weights
-    base_weights = np.array([weight for _, weight in PRESETS['weights'].items()])
-    W_sqrt = np.diag(np.sqrt(base_weights))
+    # Normalize weights by target magnitude for fair comparison
+    # Without this, small targets (like fat_g=23g) get ignored vs large targets (carbs_g=70g)
+    base_weights = [weight for weight in PRESETS['weights'].values()]
+    
+    normalized_weights = []
+    for weight, target in zip(base_weights, targets):
+        if target > 1:  # Only normalize non-zero, non-trivial targets
+            # Divide by sqrt(target) for gentler normalization
+            # This balances between absolute and percentage-based errors
+            normalized_weights.append(weight / (target ** 0.5))
+        else:
+            normalized_weights.append(weight)
+    
+    W_sqrt = np.diag(np.sqrt(np.array(normalized_weights)))
+    
+    # Set minimum and maximum bounds for all foods
+    # Min: 10g prevents trace amounts (0.5g of broccoli is pointless)
+    # Max: 400g prevents unrealistic single-food dominance
+    min_amount = 10  # grams
+    max_amount = 400  # grams
+    
+    lower_bounds = np.full(len(foods), min_amount)
+    upper_bounds = np.full(len(foods), max_amount)
     
     # Solve weighted least squares with bounds
-    result_obj = lsq_linear(W_sqrt @ A, W_sqrt @ b, bounds=(0, np.inf))
+    result_obj = lsq_linear(W_sqrt @ A, W_sqrt @ b, bounds=(lower_bounds, upper_bounds))
     x = result_obj.x
     
     targets_dict = {label: round(target, 2) for label, target in PRESETS['targets'].items()}
@@ -59,16 +93,16 @@ def optimize_meal_prep(foods: list[str]):
         
     results_dict = {}
     for i, food in enumerate(foods):
-        for category, _ in PRESETS['weights'].items():
-            if category != "vegetable_g":
-                if category not in results_dict:
-                    results_dict[category] = 0
-                results_dict[category] += FOOD_DATA[food][category] * x[i] / 100.0
-            else:
+        for category in PRESETS['weights'].keys():
+            if category == "vegetable_g":
                 if FOOD_DATA[food]['category'] == "vegetable":
                     if category not in results_dict:
                         results_dict[category] = 0
                     results_dict[category] += x[i]
+            else:
+                if category not in results_dict:
+                    results_dict[category] = 0
+                results_dict[category] += FOOD_DATA[food][category] * x[i] / 100.0
 
     results_dict['carbs_percent'] = (results_dict['carbs_g'] * 4.0) / results_dict['kcalories'] * 100.0
     results_dict['protein_percent'] = (results_dict['protein_g'] * 4.0) / results_dict['kcalories'] * 100.0

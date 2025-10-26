@@ -1,11 +1,10 @@
 PRESETS = {
     "targets": {
         "kcalories": 700,
-        # "caloric_density": 1.2,
         "carbs_percent": 40,
         "protein_percent": 30,
         "fat_percent": 30,
-        "vegetable_g_calorie_ratio": .2,
+        "vegetable_g_calorie_ratio": 0.20,  # 140g vegetables for 700 kcal meal (20% ratio)
     },
     
     "daily_values": {
@@ -27,24 +26,33 @@ PRESETS = {
         }
     },
     "weights": {
-        "kcalories": 100,
-        # "caloric_density": 30,
-        "carbs_g": 110,        # Increased from 90 - prioritize hitting carb target
-        "protein_g": 100,      # Keep high - protein is important
-        "fat_g": 110,          # Increased from 90 - prioritize hitting fat target
-        "vegetable_g": 40,     # Decreased from 50 - allow more flexibility
-        "fiber_g": 8,          # Decreased from 10
-        "magnesium_mg": 8,     # Decreased from 10
-        "potassium_mg": 8,     # Decreased from 10
-        "selenium_ug": 8,      # Decreased from 10
-        "zinc_mg": 8,          # Decreased from 10
-        "vitamin_d_ug": 8,     # Decreased from 10
-        "vitamin_k2_ug": 8,    # Decreased from 10
-        "folate_ug": 8,        # Decreased from 10
-        "vitamin_b12_ug": 8,   # Decreased from 10
-        "omega3_epa_dha_g": 8, # Decreased from 10
-        "vitamin_c_mg": 8,     # Decreased from 10
-        "vitamin_e_mg": 8,     # Decreased from 10
-        "choline_mg": 8,       # Decreased from 10
+        # Macronutrients (highest priority - these define the meal structure)
+        "kcalories": 150,      # Must hit calorie target
+        "carbs_g": 150,        # Equal weight for all macros (normalized by target size in code)
+        "protein_g": 150,      # Equal weight for all macros (normalized by target size in code)
+        "fat_g": 150,          # Equal weight for all macros (normalized by target size in code)
+        
+        # Vegetables (medium priority - important for health)
+        "vegetable_g": 20,     # Allow flexibility, but still important
+        
+        # Micronutrients (lower priority - nice to have, but don't break macros)
+        # High-priority micros (harder to get from typical foods)
+        "omega3_epa_dha_g": 5, # Hard to get without fish
+        "vitamin_d_ug": 5,     # Hard to get from food
+        "magnesium_mg": 4,     # Important for many functions
+        "potassium_mg": 4,     # Important electrolyte
+        
+        # Medium-priority micros
+        "fiber_g": 3,          # Usually hit naturally with vegetables
+        "selenium_ug": 3,      # Usually adequate
+        "zinc_mg": 3,          # Usually adequate
+        "folate_ug": 3,        # Abundant in vegetables
+        "vitamin_b12_ug": 3,   # Easy with animal products
+        "vitamin_c_mg": 3,     # Abundant in vegetables
+        
+        # Lower-priority micros (often naturally met or less critical)
+        "vitamin_k2_ug": 1,    # Rare in foods, usually low
+        "vitamin_e_mg": 2,     # Usually adequate
+        "choline_mg": 2,       # Usually adequate with eggs
     }
 }
