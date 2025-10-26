@@ -3,6 +3,6 @@ uvicorn[standard]==0.24.0
 pydantic==2.5.0
 numpy==1.26.2
 # Use a SciPy release that provides prebuilt wheels for Python 3.13 to avoid needing a Fortran compiler
-# SciPy 1.12.x+ publishes manylinux wheels for modern Python versions; pin to a known wheel release.
-scipy==1.12.3
+# SciPy 1.13+ has wheels for Python 3.13; using latest stable version for best compatibility
+scipy==1.14.1
 scikit-learn==1.3.2
