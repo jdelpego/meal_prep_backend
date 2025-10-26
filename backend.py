@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import numpy as np
 from scipy.optimize import lsq_linear
 from food_data import FOOD_DATA
@@ -17,8 +18,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class MealRequest(BaseModel):
+    foods: list[str]
+    kcalories: int = 700
+    carbs_percent: int = 40
+    protein_percent: int = 30
+    fat_percent: int = 30
+
 @app.post("/optimize_meal_prep")
-def optimize_meal_prep(foods: list[str]):
+def optimize_meal_prep(request: MealRequest):
+    
+    # Extract parameters from request
+    foods = request.foods
+    kcalories = request.kcalories
+    carbs_percent = request.carbs_percent
+    protein_percent = request.protein_percent
+    fat_percent = request.fat_percent
     
     columns = []
     for food in foods:
@@ -31,11 +46,12 @@ def optimize_meal_prep(foods: list[str]):
         columns.append(column)
     A = np.column_stack(columns)
     
-    target_kcalories = PRESETS['targets']["kcalories"]
-    target_carbs_g = (target_kcalories * (PRESETS['targets']["carbs_percent"] / 100.0)) / 4.0
-    target_protein_g = (target_kcalories * (PRESETS['targets']["protein_percent"] / 100.0)) / 4.0
-    target_fat_g = (target_kcalories * (PRESETS['targets']["fat_percent"] / 100.0)) / 9.0
-    target_vegetable_g = target_kcalories * (PRESETS['targets']['vegetable_g_calorie_ratio'])
+    # Use parameters instead of PRESETS['targets']
+    target_kcalories = kcalories
+    target_carbs_g = (target_kcalories * (carbs_percent / 100.0)) / 4.0
+    target_protein_g = (target_kcalories * (protein_percent / 100.0)) / 4.0
+    target_fat_g = (target_kcalories * (fat_percent / 100.0)) / 9.0
+    target_vegetable_g = target_kcalories * PRESETS['targets']['vegetable_g_calorie_ratio']
 
     targets = []
     for category in PRESETS['weights'].keys():
@@ -83,7 +99,14 @@ def optimize_meal_prep(foods: list[str]):
     result_obj = lsq_linear(W_sqrt @ A, W_sqrt @ b, bounds=(lower_bounds, upper_bounds))
     x = result_obj.x
     
-    targets_dict = {label: round(target, 2) for label, target in PRESETS['targets'].items()}
+    # Build targets_dict using the parameters passed to the function
+    targets_dict = {
+        "kcalories": kcalories,
+        "carbs_percent": carbs_percent,
+        "protein_percent": protein_percent,
+        "fat_percent": fat_percent,
+        "vegetable_g_calorie_ratio": PRESETS['targets']['vegetable_g_calorie_ratio']
+    }
     for category, _ in PRESETS['daily_values']['micronutrients'].items():
         targets_dict[category] = round(PRESETS['daily_values']['micronutrients'][category] * (target_kcalories / PRESETS['daily_values']['kcalories']), 2)
         
@@ -127,10 +150,10 @@ def optimize_meal_prep(foods: list[str]):
     return result
 
 @app.post("/find_missing_ingredient")
-def find_missing_ingredient(foods: list[str]):
+def find_missing_ingredient(request: MealRequest):
     """Suggests missing ingredients to fill micronutrient gaps."""
     # 1️⃣ Run optimizer
-    nutrition = optimize_meal_prep(foods)
+    nutrition = optimize_meal_prep(request)
     results = nutrition["nutrition_results"]
     targets = nutrition["nutrition_targets"]
 
@@ -157,7 +180,7 @@ def find_missing_ingredient(foods: list[str]):
     sims = cosine_similarity(nutrient_matrix, gap_vector.reshape(1, -1)).flatten()
 
     # 5️⃣ Exclude already used foods
-    candidate_scores = [(f, float(sims[i])) for i, f in enumerate(food_names) if f not in foods]
+    candidate_scores = [(f, float(sims[i])) for i, f in enumerate(food_names) if f not in request.foods]
     candidate_scores.sort(key=lambda x: x[1], reverse=True)
 
     # 6️⃣ Return top 5 names only
