@@ -123,6 +123,11 @@ def optimize_meal_prep(foods: list[str]):
     print(result)
     return result
 
+@app.post("/find_missing_ingredient")
+def find_missing_ingredient(foods: list[str]):
+    nutrition = optimize_meal_prep(foods)
+    
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001, reload=True)
