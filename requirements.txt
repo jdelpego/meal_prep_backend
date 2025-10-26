@@ -1,7 +1,7 @@
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
-numpy==1.26.2
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+pydantic==2.9.0
+numpy==2.1.0
 # Use versions with prebuilt wheels for Python 3.13 to avoid compilation
 # SciPy 1.14+ and scikit-learn 1.5+ support Python 3.13 with binary wheels
 scipy==1.14.1
