@@ -165,7 +165,7 @@ def find_missing_ingredient(request: MealRequest):
     # 1️⃣ Run optimizer
     nutrition = optimize_meal_prep(request)
     
-    if(nutrition['scores']['micro'] > 90.0 and nutrition['scores']['macro'] > 90.0):
+    if(nutrition['scores']['macro'] > 85.0):
         return {"ingredients": []} 
     
     results = nutrition["nutrition_results"]
