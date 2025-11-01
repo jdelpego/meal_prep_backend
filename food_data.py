@@ -143,26 +143,6 @@ FOOD_DATA = {
         "vitamin_e_mg": 0.3,
         "choline_mg": 12
     },
-    "oats": {
-        "category": "carb",
-        "kcalories": 379,
-        "carbs_g": 66,
-        "protein_g": 17,
-        "fat_g": 6.9,
-        "fiber_g": 10.6,
-        "magnesium_mg": 177,
-        "potassium_mg": 429,
-        "selenium_ug": 0.0,
-        "zinc_mg": 3.6,
-        "vitamin_d_ug": 0,
-        "vitamin_k2_ug": 0,
-        "folate_ug": 56,
-        "vitamin_b12_ug": 0,
-        "omega3_epa_dha_g": 0,
-        "vitamin_c_mg": 0,
-        "vitamin_e_mg": 0.0,
-        "choline_mg": 0
-    },
     "quinoa": {
         "category": "carb",
         "kcalories": 368,
@@ -243,7 +223,7 @@ FOOD_DATA = {
         "vitamin_e_mg": 2.0,
         "choline_mg": 12.8
     },
-    "carrots": {
+    "carrot": {
         "category": "vegetable",
         "kcalories": 41,
         "carbs_g": 10,
@@ -363,7 +343,7 @@ FOOD_DATA = {
         "vitamin_e_mg": 2.1,
         "choline_mg": 0
     },
-    "almonds": {
+    "almond": {
         "category": "fat",
         "kcalories": 579,
         "carbs_g": 22,
@@ -403,7 +383,7 @@ FOOD_DATA = {
         "vitamin_e_mg": 14.4,
         "choline_mg": 0.3
     },
-    "blueberries": {
+    "blueberry": {
         "category": "fruit",
         "kcalories": 57,
         "carbs_g": 14,
