@@ -164,6 +164,10 @@ def find_missing_ingredient(request: MealRequest):
     """Suggests missing ingredients to fill micronutrient gaps."""
     # 1️⃣ Run optimizer
     nutrition = optimize_meal_prep(request)
+    
+    if(nutrition['scores']['micro'] > 90.0 and nutrition['scores']['macro'] > 90.0):
+        return {"ingredients": []} 
+    
     results = nutrition["nutrition_results"]
     targets = nutrition["nutrition_targets"]
 
@@ -193,8 +197,8 @@ def find_missing_ingredient(request: MealRequest):
     candidate_scores = [(f, float(sims[i])) for i, f in enumerate(food_names) if f not in request.foods]
     candidate_scores.sort(key=lambda x: x[1], reverse=True)
 
-    # 6️⃣ Return top 5 names only
-    top_ingredients = [f for f, _ in candidate_scores[:5]]
+    # 6️⃣ Return top 3 names only
+    top_ingredients = [f for f, _ in candidate_scores[:3]]
 
     return {"ingredients": top_ingredients}
 
