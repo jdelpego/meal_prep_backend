@@ -165,7 +165,7 @@ def find_missing_ingredient(request: MealRequest):
     # 1️⃣ Run optimizer
     nutrition = optimize_meal_prep(request)
     
-    if(nutrition['scores']['macro'] > 85.0):
+    if(nutrition['scores']['macro'] > 90.0 and len(request.foods) > 4):
         return {"ingredients": []} 
     
     results = nutrition["nutrition_results"]
@@ -198,8 +198,9 @@ def find_missing_ingredient(request: MealRequest):
     candidate_scores.sort(key=lambda x: x[1], reverse=True)
 
     # 6️⃣ Return top 3 names only
-    top_ingredients = [f for f, _ in candidate_scores[:3]]
+    top_ingredients = [f for f, _ in candidate_scores[:1]]
 
+    print(top_ingredients)
     return {"ingredients": top_ingredients}
 
 
