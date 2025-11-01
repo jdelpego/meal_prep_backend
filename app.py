@@ -135,15 +135,25 @@ def optimize_meal_prep(request: MealRequest):
     results_dict['protein_percent'] = (results_dict['protein_g'] * 4.0) / results_dict['kcalories'] * 100.0
     results_dict['fat_percent'] = (results_dict['fat_g'] * 9.0) / results_dict['kcalories'] * 100.0
     results_dict['vegetable_calorie_ratio'] = results_dict['vegetable_g'] / results_dict['kcalories']
+    
 
     # Round all results to 2 decimal places
+    targets_dict = {k: round(v, 2) for k, v in targets_dict.items()}
     results_dict = {k: round(v, 2) for k, v in results_dict.items()}
     
+    macro_score = max(0.0, 100.0 - (2.0 / 3.0) * sum(abs(results_dict[k] - targets_dict[k]) for k in ("carbs_percent", "protein_percent", "fat_percent")))
+    micros = PRESETS["daily_values"]["micronutrients"]
+    micro_score = sum(
+    100.0 if not targets_dict.get(k) else min(100.0, results_dict.get(k, 0.0) * 100.0 / targets_dict[k])
+    for k in micros) / len(micros)
+
+
     # Result in grams
     result = {
         "recipe": {food: round(x[i], 1) for i, food in enumerate(foods)},
         "nutrition_targets": targets_dict,
-        "nutrition_results": results_dict
+        "nutrition_results": results_dict,
+        "scores": {"macro": round(macro_score, 2), "micro": round(micro_score, 2)},
     }
        
     print(result)
